@@ -1,0 +1,36 @@
+<div class="genres-page">
+  <app-navbar activeLink="genres" />
+  <app-book-backdrop />
+
+  <main class="genres-container">
+    <header class="genres-header">
+      <h1 class="genres-title">Genres</h1>
+    </header>
+
+    @if (loading()) {
+      <div class="spinner-container">
+        <div class="spinner"></div>
+        <p>Loading genres list...</p>
+      </div>
+    } @else {
+      <div class="genres-grid">
+        @for (genre of genres(); track genre.id) {
+          <div class="genre-card" (click)="selectGenre(genre.name)">
+            <div class="genre-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <h2 class="genre-name">{{ genre.name }}</h2>
+            <span class="genre-explore-btn">Explore Books</span>
+          </div>
+        } @empty {
+          <div class="no-genres">
+            No genres found in the database.
+          </div>
+        }
+      </div>
+    }
+  </main>
+</div>

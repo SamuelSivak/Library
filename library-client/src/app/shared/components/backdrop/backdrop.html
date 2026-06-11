@@ -1,0 +1,18 @@
+<div class="book-backdrop" aria-hidden="true">
+  <div class="backdrop-overlay"></div>
+  <div class="book-row row-left">
+    @for (book of row1; track $index) {
+      <img class="book-cover" [src]="book.url" [alt]="book.title" loading="lazy" />
+    }
+  </div>
+  <div class="book-row row-right">
+    @for (book of row2; track $index) {
+      <img class="book-cover" [src]="book.url" [alt]="book.title" loading="lazy" />
+    }
+  </div>
+  <div class="book-row row-left-slow">
+    @for (book of row3; track $index) {
+      <img class="book-cover" [src]="book.url" [alt]="book.title" loading="lazy" />
+    }
+  </div>
+</div>

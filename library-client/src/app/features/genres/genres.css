@@ -1,0 +1,142 @@
+.genres-page {
+  position: relative;
+  min-height: 100vh;
+  background: transparent;
+  color: #f3f1f6;
+  padding-bottom: 4rem;
+}
+
+.genres-container {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8rem 2rem 2rem;
+}
+
+.genres-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.genres-title {
+  font-family: 'Still Time', sans-serif;
+  font-size: 7.5rem;
+  line-height: 1;
+  text-align: center;
+  color: var(--accent-light);
+  margin: 0;
+  text-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+}
+
+.genres-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.genre-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+.genre-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(124, 58, 237, 0.45);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(124, 58, 237, 0.3);
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.genre-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c084fc;
+  transition: all 0.3s ease;
+}
+
+.genre-card:hover .genre-icon {
+  background: #7c3aed;
+  color: #fff;
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+}
+
+.genre-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.genre-explore-btn {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #a78bfa;
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
+  transition: color 0.15s ease;
+}
+
+.genre-card:hover .genre-explore-btn {
+  color: #fff;
+}
+
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8rem 0;
+  color: #9d8ec4;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(168, 85, 247, 0.1);
+  border-radius: 50%;
+  border-top-color: #a855f7;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.no-genres {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .genres-container {
+    padding: 7rem 1.5rem 2rem;
+  }
+  .genres-title {
+    font-size: 5.5rem;
+  }
+}

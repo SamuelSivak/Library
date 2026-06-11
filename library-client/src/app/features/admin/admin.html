@@ -1,0 +1,246 @@
+<div class="admin-page">
+  <app-navbar />
+  <app-book-backdrop />
+
+  <main class="admin-container">
+    <header class="admin-header">
+      <div>
+        <h1 class="admin-title">{{ loc.t('admin.title', 'Administrácia kníh') }}</h1>
+        <p class="admin-subtitle">{{ loc.t('admin.subtitle', 'Spravujte knižný katalóg, nahrávajte obálky a upravujte detaily kníh.') }}</p>
+      </div>
+      <button class="btn btn--primary" (click)="openAddModal()" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        {{ loc.t('admin.addBtn', 'Pridať knihu') }}
+      </button>
+    </header>
+
+    @if (loading()) {
+      <div class="admin-loading">
+        <div class="spinner"></div>
+        <p>{{ loc.t('admin.loading', 'Načítavam dáta z databázy...') }}</p>
+      </div>
+    } @else {
+      <div class="table-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>{{ loc.t('admin.cover', 'Obálka') }}</th>
+              <th>{{ loc.t('admin.title_header', 'Názov') }}</th>
+              <th>{{ loc.t('admin.author', 'Autor') }}</th>
+              <th>{{ loc.t('admin.genres', 'Žánre') }}</th>
+              <th>{{ loc.t('admin.pages', 'Počet strán') }}</th>
+              <th>{{ loc.t('admin.isbn', 'ISBN') }}</th>
+              <th>{{ loc.t('admin.published', 'Publikované') }}</th>
+              <th class="text-right">{{ loc.t('admin.actions', 'Akcie') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (book of books(); track book.id) {
+              <tr>
+                <td>
+                  @if (book.imageUrl && !imageErrors()[book.id]) {
+                    <img class="table-cover" [src]="book.imageUrl" [alt]="book.title" (error)="onImageError(book.id)" />
+                  } @else {
+                    <div class="table-cover-placeholder">
+                      {{ book.title[0] }}
+                    </div>
+                  }
+                </td>
+                <td class="font-bold">{{ book.title }}</td>
+                <td>{{ book.authorName }}</td>
+                <td>
+                  <div class="badges-wrap">
+                    @for (genre of book.genres; track genre) {
+                      <span class="genre-badge">{{ genre }}</span>
+                    }
+                  </div>
+                </td>
+                <td>{{ book.pageCount }}</td>
+                <td class="font-mono text-sm">{{ book.isbn || '-' }}</td>
+                <td>{{ book.published | date:'dd.MM.yyyy' }}</td>
+                <td class="text-right">
+                  <div class="actions-group">
+                    <button class="btn-action btn-action--edit" (click)="openEditModal(book)" [title]="loc.t('admin.edit', 'Upraviť')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button class="btn-action btn-action--danger" (click)="requestDelete(book.id, book.title)" [title]="loc.t('admin.delete', 'Vymazať')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="text-center py-8 text-gray-500">
+                  {{ loc.t('admin.empty', 'V databáze nie sú žiadne knihy.') }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </main>
+
+  @if (isModalOpen()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2>{{ modalTitle() }}</h2>
+          <button class="modal-close" (click)="closeModal()" type="button">&times;</button>
+        </header>
+
+        <form (ngSubmit)="onSubmit()" #bookForm="ngForm">
+          <div class="modal-body">
+            @if (formError()) {
+              <div class="form-error-banner">{{ formError() }}</div>
+            }
+            <div class="form-grid">
+
+              <div class="form-col">
+                <div class="form-group">
+                  <label for="title">{{ loc.t('admin.bookTitleLabel', 'Názov knihy *') }}</label>
+                  <input type="text" id="title" name="title" [(ngModel)]="formModel.title" required
+                    placeholder="napr. 1984" class="form-control" />
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label for="isbn">{{ loc.t('admin.isbnLabel', 'ISBN (13 číslic)') }}</label>
+                    <input type="text" id="isbn" name="isbn" [(ngModel)]="formModel.isbn"
+                      placeholder="napr. 9780451524935" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="pageCount">{{ loc.t('admin.pagesLabel', 'Počet strán') }}</label>
+                    <input type="number" id="pageCount" name="pageCount" [(ngModel)]="formModel.pageCount"
+                      min="1" max="10000" class="form-control" />
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label for="author">{{ loc.t('admin.authorLabel', 'Autor *') }}</label>
+                    <select id="author" name="author" [(ngModel)]="formModel.authorId" required class="form-control">
+                      @for (author of authors(); track author.id) {
+                        <option [value]="author.id">{{ author.name }} {{ author.surname }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="published">{{ loc.t('admin.publishedLabel', 'Dátum vydania') }}</label>
+                    <input type="date" id="published" name="published" [(ngModel)]="formModel.published"
+                      class="form-control" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="description">{{ loc.t('admin.descriptionLabel', 'Popis knihy') }}</label>
+                  <textarea id="description" name="description" [(ngModel)]="formModel.description"
+                    [placeholder]="loc.t('admin.descriptionPlaceholder', 'Stručný obsah knihy...')" class="form-control textarea" rows="3"></textarea>
+                </div>
+              </div>
+
+              <div class="form-col">
+                <div class="form-group">
+                  <label>{{ loc.t('admin.coverLabel', 'Obálka (Upload na Blob Server / MinIO)') }}</label>
+
+                  <div class="upload-container">
+                    <label class="upload-dropzone">
+                      <input type="file" (change)="onFileSelected($event)" accept="image/*" class="file-input" />
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                      <span>{{ loc.t('admin.uploadClick', 'Kliknite na nahratie obálky') }}</span>
+                    </label>
+                  </div>
+
+                  @if (uploading()) {
+                    <p class="upload-status info">{{ loc.t('admin.uploadStatus', 'Uploading to S3 Blob Storage...') }}</p>
+                  }
+                  @if (uploadError()) {
+                    <p class="upload-status error">{{ uploadError() }}</p>
+                  }
+
+                  <input type="text" name="imageUrl" [(ngModel)]="formModel.imageUrl"
+                    [placeholder]="loc.t('admin.imageUrlPlaceholder', 'URL adresa obrázka (z MinIO alebo externá)')" class="form-control mt-2" />
+
+                  @if (formModel.imageUrl) {
+                    <div class="cover-preview-card">
+                      <img [src]="formModel.imageUrl" alt="Preview" class="cover-preview-img" />
+                      <div class="cover-preview-overlay">
+                        <span>{{ loc.t('admin.coverSelected', 'Zvolený súbor z Blob servera') }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <div class="form-group">
+                  <label>{{ loc.t('admin.genresLabel', 'Žánre') }}</label>
+                  
+                  <div class="add-genre-inline">
+                    <input type="text" [(ngModel)]="newGenreName" name="newGenreName"
+                      [placeholder]="loc.t('admin.newGenrePlaceholder', 'Nový žáner...')" class="form-control inline-input" />
+                    <button type="button" class="btn btn--secondary btn--sm" (click)="addNewGenre()">
+                      {{ loc.t('admin.addGenreBtn', 'Pridať') }}
+                    </button>
+                  </div>
+
+                  <div class="genres-checklist mt-2">
+                    @for (genre of genres(); track genre.id) {
+                      <label class="genre-check-item">
+                        <input type="checkbox" [checked]="isGenreSelected(genre.id)"
+                          (change)="toggleGenre(genre.id)" />
+                        <span>{{ genre.name }}</span>
+                      </label>
+                    }
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <footer class="modal-footer">
+            <button class="btn btn--secondary" (click)="closeModal()" type="button">{{ loc.t('admin.cancel', 'Zrušiť') }}</button>
+            <button class="btn btn--primary" type="submit" [disabled]="!bookForm.form.valid || uploading()">
+              {{ loc.t('admin.save', 'Uložiť knihu') }}
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (pendingDeleteId() !== null) {
+    <div class="modal-overlay" (click)="cancelDelete()">
+      <div class="modal-card" style="max-width: 440px;" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2>{{ loc.t('admin.confirmDelete', 'Confirm Deletion') }}</h2>
+          <button class="modal-close" (click)="cancelDelete()" type="button">&times;</button>
+        </header>
+        <div class="modal-body" style="text-align: center; padding: 2rem;">
+          <p style="color: #e2dbe9; margin-bottom: 0.5rem;">{{ loc.t('admin.deleteMsg', 'Are you sure you want to delete') }}</p>
+          <p style="color: #fff; font-weight: 600; font-size: 1.1rem;">"{{ pendingDeleteTitle() }}"?</p>
+        </div>
+        <footer class="modal-footer">
+          <button class="btn btn--secondary" (click)="cancelDelete()" type="button">{{ loc.t('admin.cancel', 'Cancel') }}</button>
+          <button class="btn btn--danger" (click)="confirmDelete()" type="button">{{ loc.t('admin.delete', 'Delete') }}</button>
+        </footer>
+      </div>
+    </div>
+  }
+</div>

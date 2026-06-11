@@ -1,0 +1,110 @@
+<div class="auth-page">
+  <app-navbar />
+  <app-book-backdrop />
+
+  <main class="auth-container">
+    <div class="auth-card">
+      <header class="auth-header">
+        <h1 class="auth-title">
+          {{ isSignUp() ? 'Create Account' : 'Welcome Back' }}
+        </h1>
+        <p class="auth-subtitle">
+          {{ isSignUp() ? 'Register a new library account.' : 'Sign in to access your dashboard.' }}
+        </p>
+      </header>
+
+      @if (errorMessage()) {
+        <div class="error-banner">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <form (ngSubmit)="onSubmit()" #authForm="ngForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            [(ngModel)]="formData.username" 
+            required 
+            placeholder="Enter username" 
+            class="form-control"
+          />
+        </div>
+
+        @if (isSignUp()) {
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              [(ngModel)]="formData.email" 
+              required 
+              email
+              placeholder="name@example.com" 
+              class="form-control"
+            />
+          </div>
+        }
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input 
+            [type]="showPassword() ? 'text' : 'password'" 
+            id="password" 
+            name="password" 
+            [(ngModel)]="formData.password" 
+            required 
+            placeholder="••••••••" 
+            class="form-control"
+          />
+        </div>
+
+        @if (isSignUp()) {
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <input 
+              [type]="showPassword() ? 'text' : 'password'" 
+              id="confirmPassword" 
+              name="confirmPassword" 
+              [ngModel]="confirmPassword()" 
+              (ngModelChange)="confirmPassword.set($event)"
+              required 
+              placeholder="••••••••" 
+              class="form-control"
+            />
+          </div>
+        }
+
+        <div class="form-check-group">
+          <label class="checkbox-container">
+            <input 
+              type="checkbox" 
+              [checked]="showPassword()" 
+              (change)="toggleShowPassword()" 
+            />
+            <span>Show Password</span>
+          </label>
+        </div>
+
+        <button class="btn-auth" type="submit" [disabled]="!authForm.form.valid || loading()">
+          @if (loading()) {
+            <span class="spinner"></span>
+            Processing...
+          } @else {
+            {{ isSignUp() ? 'Register' : 'Sign In' }}
+          }
+        </button>
+      </form>
+
+      <p class="auth-toggle-text">
+        {{ isSignUp() ? 'Already have an account?' : "Don't have an account?" }}
+        <button class="auth-toggle-link" (click)="toggleMode()" type="button">
+          {{ isSignUp() ? 'Sign In' : 'Register' }}
+        </button>
+      </p>
+    </div>
+  </main>
+</div>

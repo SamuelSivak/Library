@@ -1,0 +1,58 @@
+.book-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 0;
+  transform: scale(1.06);
+  filter: blur(3.6px);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.backdrop-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 15, 0.76);
+  z-index: 1;
+}
+
+:host-context(.admin-page) .book-backdrop {
+  transform: scale(1.20);
+  filter: blur(65px);
+}
+
+:host-context(.admin-page) .backdrop-overlay {
+  background: rgba(0, 0, 0, 0.84);
+}
+
+.book-row {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  flex-shrink: 0;
+}
+
+.row-left      { animation: scrollLeft     80s linear infinite; }
+.row-right     { animation: scrollRight    64s linear infinite; }
+.row-left-slow { animation: scrollLeft     110s linear infinite; }
+
+.book-cover {
+  width: 128px;
+  height: 190px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+}
+
+@keyframes scrollLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes scrollRight {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
