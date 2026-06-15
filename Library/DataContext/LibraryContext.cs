@@ -1,9 +1,11 @@
 using Library.DTOs;
-using Library.Logging;
+using Library.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 namespace Library.DataContext
 {
-    public class LibraryContext : DbContext
+    public class LibraryContext : IdentityDbContext<ApplicationUser>
     {
         public LibraryContext(DbContextOptions<LibraryContext> options) : base(options) { }
 
@@ -14,14 +16,15 @@ namespace Library.DataContext
         public DbSet<Models.Country> Country { get; set; }
         public DbSet<Models.Review> Reviews { get; set; }
         public DbSet<Models.Reviewer> Reviewers { get; set; }
-        public DbSet<Models.User> Users { get; set; }
-        public DbSet<Log> Logs { get; set; }
         public DbSet<Models.BookTranslation> BookTranslations { get; set; }
         public DbSet<Models.GenreTranslation> GenreTranslations { get; set; }
         public DbSet<Models.AuthorTranslation> AuthorTranslations { get; set; }
+        public DbSet<Models.BiBookAnalytics> BiBookAnalytics { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<Models.BookGenre>()
                 .HasKey(book => new { book.BookId, book.GenreId });
 
@@ -45,17 +48,24 @@ namespace Library.DataContext
                 .Property(r => r.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            modelBuilder.Entity<Models.User>()
-                .HasIndex(u => u.Username)
-                .IsUnique();
+            modelBuilder.Entity<Models.BiBookAnalytics>()
+                .ToTable("Bi_BookAnalytics")
+                .HasKey(book => book.BookId);
 
-            modelBuilder.Entity<Models.User>()
-                .HasIndex(u => u.Email)
-                .IsUnique();
+            modelBuilder.Entity<Models.BiBookAnalytics>()
+                .HasOne(ba => ba.Book)
+                .WithOne(b => b.Analytics)
+                .HasForeignKey<Models.BiBookAnalytics>(ba => ba.BookId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Models.User>()
-                .Property(u => u.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+            modelBuilder.Entity<Models.Book>()
+                .HasIndex(b => b.AuthorId);
+
+            modelBuilder.Entity<Models.Review>()
+                .HasIndex(r => r.BookId);
+
+            modelBuilder.Entity<Models.Review>()
+                .HasIndex(r => r.UserId);
         }
     }
 }

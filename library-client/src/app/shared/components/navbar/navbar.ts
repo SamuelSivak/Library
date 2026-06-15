@@ -18,7 +18,7 @@ interface Lang {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NavbarComponent {
-  @Input() activeLink: 'books' | 'authors' | 'genres' = 'books';
+  @Input() activeLink: 'books' | 'authors' | 'genres' | 'home' | '' = '';
 
   readonly authService = inject(AuthService);
   readonly loc = inject(LocalizationService);

@@ -11,11 +11,22 @@ export class BookService {
   private readonly http = inject(HttpClient);
   readonly apiUrl = environment.apiUrl;
 
-  getBooks(search?: string, genre?: string): Observable<Book[]> {
+  getBooks(search?: string, genre?: string, sortBy?: string): Observable<Book[]> {
     let params = new HttpParams();
     if (search) params = params.set('search', search);
     if (genre) params = params.set('genre', genre);
+    if (sortBy) params = params.set('sortBy', sortBy);
     return this.http.get<Book[]>(`${this.apiUrl}/api/Book`, { params });
+  }
+
+  getBooksPaged(page: number, pageSize: number, search?: string, genre?: string, sortBy?: string): Observable<import('@angular/common/http').HttpResponse<Book[]>> {
+    let params = new HttpParams()
+      .set('page', String(page))
+      .set('pageSize', String(pageSize));
+    if (search) params = params.set('search', search);
+    if (genre) params = params.set('genre', genre);
+    if (sortBy) params = params.set('sortBy', sortBy);
+    return this.http.get<Book[]>(`${this.apiUrl}/api/Book`, { params, observe: 'response' });
   }
 
   getGenres(includeEmpty: boolean = false): Observable<Genre[]> {
@@ -41,6 +52,14 @@ export class BookService {
 
   getAuthors(): Observable<Author[]> {
     return this.http.get<Author[]>(`${this.apiUrl}/api/Author`);
+  }
+
+  getCountries(): Observable<{ id: number; name: string }[]> {
+    return this.http.get<{ id: number; name: string }[]>(`${this.apiUrl}/api/Country`);
+  }
+
+  createAuthor(author: { name: string; surname: string; countryId: number }): Observable<Author> {
+    return this.http.post<Author>(`${this.apiUrl}/api/Author`, author);
   }
 
   createBook(book: BookCreateDto): Observable<Book> {

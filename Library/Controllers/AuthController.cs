@@ -1,7 +1,7 @@
 using Library.DTOs;
 using Library.Models;
-using Library.Repositories;
 using Library.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -11,70 +11,85 @@ namespace Library.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IUserRepository _userRepository;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITokenService _tokenService;
 
-        public AuthController(IUserRepository userRepository, ITokenService tokenService)
+        public AuthController(UserManager<ApplicationUser> userManager, ITokenService tokenService)
         {
-            _userRepository = userRepository;
+            _userManager = userManager;
             _tokenService = tokenService;
         }
 
         [HttpPost("register")]
         public async Task<ActionResult<UserDTO>> Register(RegisterDTO registerDto)
         {
-            if (await _userRepository.UsernameExistsAsync(registerDto.Username))
+            var userExists = await _userManager.FindByNameAsync(registerDto.Username);
+            if (userExists != null)
             {
                 return BadRequest("Username is already taken.");
             }
 
-            if (await _userRepository.EmailExistsAsync(registerDto.Email))
+            var emailExists = await _userManager.FindByEmailAsync(registerDto.Email);
+            if (emailExists != null)
             {
                 return BadRequest("Email is already registered.");
             }
 
-            var user = new User
+            var user = new ApplicationUser
             {
-                Username = registerDto.Username,
-                Email = registerDto.Email,
-                PasswordHash = PasswordHasher.HashPassword(registerDto.Password),
-                Role = "User"
+                UserName = registerDto.Username,
+                Email = registerDto.Email
             };
 
-            await _userRepository.CreateAsync(user);
+            var result = await _userManager.CreateAsync(user, registerDto.Password);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(error.Code, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+
+            // Assign default role "User"
+            await _userManager.AddToRoleAsync(user, "User");
 
             return new UserDTO
             {
-                Username = user.Username,
-                Email = user.Email,
-                Token = _tokenService.CreateToken(user),
-                Role = user.Role
+                Username = user.UserName!,
+                Email = user.Email!,
+                Token = await _tokenService.CreateToken(user),
+                Role = "User"
             };
         }
 
         [HttpPost("login")]
         public async Task<ActionResult<UserDTO>> Login(LoginDTO loginDto)
         {
-            var user = await _userRepository.GetByUsernameOrEmailAsync(loginDto.Username);
+            var user = await _userManager.FindByNameAsync(loginDto.Username)
+                       ?? await _userManager.FindByEmailAsync(loginDto.Username);
 
             if (user == null)
             {
-                return Unauthorized("Ivalid username or password.");
+                return Unauthorized("Invalid username or password.");
             }
 
-            var result = PasswordHasher.VerifyPassword(loginDto.Password, user.PasswordHash);
+            var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
 
             if (!result)
             {
-                return Unauthorized("invalid username or password.");
+                return Unauthorized("Invalid username or password.");
             }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var primaryRole = roles.FirstOrDefault() ?? "User";
 
             return new UserDTO
             {
-                Username = user.Username,
-                Email = user.Email,
-                Token = _tokenService.CreateToken(user),
-                Role = user.Role
+                Username = user.UserName!,
+                Email = user.Email!,
+                Token = await _tokenService.CreateToken(user),
+                Role = primaryRole
             };
         }
     }

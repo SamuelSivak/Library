@@ -10,17 +10,26 @@ namespace Library.Repositories
     {
         private readonly LibraryContext _context;
         private readonly ILanguageService _languageService;
+        private readonly ICacheService _cache;
 
-        public AuthorRepository(LibraryContext context, ILanguageService languageService)
+        public AuthorRepository(LibraryContext context, ILanguageService languageService, ICacheService cache)
         {
             _context = context;
             _languageService = languageService;
+            _cache = cache;
         }
 
         public async Task<IEnumerable<AuthorDTO>> GetAllAsync()
         {
             var currentLang = _languageService.GetCurrentLanguage();
-            return await _context.Authors
+            var cacheKey = $"authors_all_{currentLang}";
+            var cached = await _cache.GetAsync<IEnumerable<AuthorDTO>>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            var result = await _context.Authors
                 .Select(a => new AuthorDTO
                 {
                     Id = a.Id,
@@ -38,12 +47,22 @@ namespace Library.Repositories
                     ).ToList()
                 })
                 .ToListAsync();
+
+            await _cache.SetAsync(cacheKey, (IEnumerable<AuthorDTO>)result, TimeSpan.FromMinutes(30));
+            return result;
         }
 
         public async Task<AuthorDTO?> GetByIdAsync(int id)
         {
             var currentLang = _languageService.GetCurrentLanguage();
-            return await _context.Authors
+            var cacheKey = $"author_{id}_{currentLang}";
+            var cached = await _cache.GetAsync<AuthorDTO>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            var author = await _context.Authors
                 .Where(a => a.Id == id)
                 .Select(a => new AuthorDTO
                 {
@@ -62,6 +81,12 @@ namespace Library.Repositories
                     ).ToList()
                 })
                 .FirstOrDefaultAsync();
+
+            if (author != null)
+            {
+                await _cache.SetAsync(cacheKey, author, TimeSpan.FromMinutes(30));
+            }
+            return author;
         }
 
         public async Task<AuthorDTO> CreateAsync(CreateAuthorDTO author)
@@ -74,6 +99,12 @@ namespace Library.Repositories
             };
             _context.Authors.Add(newAuthor);
             await _context.SaveChangesAsync();
+
+            foreach (var lang in new[] { "SK", "EN", "GR" })
+            {
+                await _cache.RemoveAsync($"authors_all_{lang}");
+            }
+
             return (await GetByIdAsync(newAuthor.Id))!;
         }
         public async Task<bool> ExistsAsync(string name, string surname)

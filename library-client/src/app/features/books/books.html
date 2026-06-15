@@ -1,0 +1,253 @@
+<div class="books-page">
+  <app-navbar activeLink="books" />
+  <app-book-backdrop />
+
+  <main class="books-container">
+    <header class="books-header">
+      <h1 class="books-title">Catalog</h1>
+      <div class="sort-container">
+        <label for="sortBySelect" class="sort-label">{{ loc.t('books.sort.label', 'Zoradiť podľa:') }}</label>
+        <select id="sortBySelect" class="sort-select" [ngModel]="sortBy()" (ngModelChange)="onSortChange($event)">
+          <option value="popularity">{{ loc.t('books.sort.popularity', 'Popularity') }}</option>
+          <option value="rating">{{ loc.t('books.sort.rating', 'Celkového hodnotenia') }}</option>
+          <option value="positivereviews">{{ loc.t('books.sort.positivereviews', 'Kladných recenzií') }}</option>
+          <option value="negativereviews">{{ loc.t('books.sort.negativereviews', 'Záporných recenzií') }}</option>
+          <option value="published">{{ loc.t('books.sort.published', 'Dátumu vydania') }}</option>
+          <option value="pages">{{ loc.t('books.sort.pages', 'Počtu strán') }}</option>
+          <option value="alphabetical">{{ loc.t('books.sort.alphabetical', 'Abecedne') }}</option>
+        </select>
+      </div>
+    </header>
+
+    @if (loading()) {
+      <div class="spinner-container">
+        <div class="spinner"></div>
+      </div>
+    } @else {
+      <div class="books-grid">
+        @for (book of books(); track book.id) {
+          <div class="book-block" (click)="openBookDetails(book)">
+            @if (book.imageUrl && !imageErrors()[book.id]) {
+              <img [src]="book.imageUrl" [alt]="book.title" (error)="onImageError(book.id)" />
+            } @else {
+              <div class="book-cover-letter">
+                {{ book.title ? book.title[0] : 'B' }}
+              </div>
+            }
+            <div class="book-meta">
+              <span class="book-genre-badge">
+                {{ book.genres && book.genres.length > 0 ? book.genres.join(', ') : 'Book' }}
+              </span>
+              <h3 class="book-title">{{ book.title }}</h3>
+              <p class="book-author">{{ book.authorName }}</p>
+            </div>
+          </div>
+        } @empty {
+          <div class="no-results">
+            {{ loc.t('books.empty', 'Nenašli sa žiadne knihy.') }}
+          </div>
+        }
+      </div>
+
+      <!-- Pagination controls -->
+      @if (totalPages() > 1) {
+        <div class="pagination-container">
+          <button 
+            class="pagination-btn pagination-nav-btn" 
+            [disabled]="currentPage() === 1" 
+            (click)="setPage(currentPage() - 1)">
+            &larr; {{ loc.t('pagination.prev', 'Predchádzajúca') }}
+          </button>
+          
+          <div class="pagination-pages">
+            @for (page of getPages(); track $index) {
+              @if (page === '...') {
+                <span class="pagination-ellipsis">...</span>
+              } @else {
+                <button 
+                  class="pagination-btn" 
+                  [class.pagination-btn--active]="currentPage() === page" 
+                  (click)="setPage(+page)">
+                  {{ page }}
+                </button>
+              }
+            }
+          </div>
+          
+          <button 
+            class="pagination-btn pagination-nav-btn" 
+            [disabled]="currentPage() === totalPages()" 
+            (click)="setPage(currentPage() + 1)">
+            {{ loc.t('pagination.next', 'Nasledujúca') }} &rarr;
+          </button>
+        </div>
+      }
+    }
+  </main>
+
+  <!-- Details Modal -->
+  @if (selectedBook(); as book) {
+    <div class="modal-overlay" (click)="closeBookDetails()">
+      <div class="details-card" (click)="$event.stopPropagation()">
+        <header class="details-header">
+          <div>
+            <span class="details-subtitle">{{ book.authorName }}</span>
+            <h2 class="details-title">{{ book.title }}</h2>
+          </div>
+          <button class="details-close" (click)="closeBookDetails()" type="button">&times;</button>
+        </header>
+
+        <div class="details-body">
+          <div class="details-grid">
+            
+            <!-- Left Column: Cover & Stats -->
+            <div class="details-col-left">
+              <div class="details-cover-wrapper">
+                @if (book.imageUrl && !imageErrors()[book.id]) {
+                  <img [src]="book.imageUrl" [alt]="book.title" class="details-cover-img" (error)="onImageError(book.id)" />
+                } @else {
+                  <div class="details-cover-placeholder">
+                    {{ book.title ? book.title[0] : 'B' }}
+                  </div>
+                }
+              </div>
+              
+              <div class="details-stats">
+                <div class="stat-item">
+                  <span class="stat-label">{{ loc.t('details.pages', 'Počet strán') }}</span>
+                  <span class="stat-value">{{ book.pageCount }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">{{ loc.t('details.isbn', 'ISBN') }}</span>
+                  <span class="stat-value font-mono">{{ book.isbn || '-' }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">{{ loc.t('details.published', 'Vydané') }}</span>
+                  <span class="stat-value">{{ book.published | date:'dd.MM.yyyy' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Description & Reviews -->
+            <div class="details-col-right">
+              <div class="details-section">
+                <div class="details-genres">
+                  @for (genre of book.genres; track genre) {
+                    <span class="genre-badge">{{ genre }}</span>
+                  }
+                </div>
+                <p class="details-desc">{{ book.description || loc.t('details.no_desc', 'Tento titul nemá zadaný popis.') }}</p>
+              </div>
+
+              <!-- Rating Header -->
+              <div class="details-rating-summary">
+                <span class="summary-label">{{ loc.t('details.rating', 'Celkové hodnotenie') }}</span>
+                <div class="rating-stars-row">
+                  <div class="stars-wrap">
+                    @for (star of [1, 2, 3, 4, 5]; track star) {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="star-svg">
+                        @if (star - 0.5 === (book.averageRating || 0)) {
+                          <defs>
+                            <linearGradient id="halfGradBooks">
+                              <stop offset="50%" stop-color="#c084fc" />
+                              <stop offset="50%" stop-color="rgba(255, 255, 255, 0.15)" />
+                            </linearGradient>
+                          </defs>
+                          <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="url(#halfGradBooks)" />
+                        } @else if (star <= (book.averageRating || 0)) {
+                          <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="#c084fc" />
+                        } @else {
+                          <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="rgba(255, 255, 255, 0.15)" />
+                        }
+                      </svg>
+                    }
+                  </div>
+                  <span class="summary-value">{{ book.averageRating ? book.averageRating : '0' }} / 5</span>
+                </div>
+              </div>
+
+              <div class="details-section">
+                <h4 class="section-title">{{ loc.t('details.reviews_title', 'Používateľské recenzie') }}</h4>
+                
+                @if (authService.isLoggedIn()) {
+                  <!-- Add Review Form -->
+                  <div class="add-review-box">
+                    <textarea 
+                      [placeholder]="loc.t('details.review_placeholder', 'Napíšte svoju recenziu...')" 
+                      class="form-control" 
+                      rows="2"
+                      [ngModel]="newReviewText()"
+                      (ngModelChange)="newReviewText.set($event)">
+                    </textarea>
+                    
+                    <div class="review-submit-bar">
+                      <div class="rating-picker">
+                        @for (star of [1, 2, 3, 4, 5]; track star) {
+                          <button 
+                            type="button" 
+                            class="star-picker-btn" 
+                            [class.star-picker-btn--active]="newReviewRating() >= star"
+                            (click)="selectRating(star)">
+                            &#9733;
+                          </button>
+                        }
+                      </div>
+                      
+                      <button 
+                        class="btn btn--primary btn--sm" 
+                        [disabled]="submittingReview()" 
+                        (click)="submitReview()">
+                        {{ submittingReview() ? loc.t('details.submitting', 'Odosielam...') : loc.t('details.submit', 'Pridať') }}
+                      </button>
+                    </div>
+
+                    @if (reviewError()) {
+                      <div class="review-error">{{ reviewError() }}</div>
+                    }
+                  </div>
+                } @else {
+                  <div class="reviews-login-hint">
+                    {{ loc.t('details.login_to_review', 'Pre pridanie recenzie sa prosím prihláste.') }}
+                  </div>
+                }
+
+                <div class="reviews-list">
+                  @for (rev of book.reviews; track rev.id) {
+                    <div class="review-item">
+                      <header class="review-item-header">
+                        <span class="reviewer-name">{{ rev.reviewerName }}</span>
+                        <div class="review-meta-right">
+                          <span class="review-stars">
+                            @for (s of [1, 2, 3, 4, 5]; track s) {
+                              <span class="star-mini" [class.star-mini--active]="rev.rating >= s">&#9733;</span>
+                            }
+                          </span>
+                          <span class="review-date">{{ rev.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                          @if (authService.isAdmin()) {
+                            <button 
+                              class="btn-delete-review" 
+                              (click)="deleteReview(rev.id)" 
+                              [title]="loc.t('details.delete_review', 'Vymazať recenziu')">
+                              &times;
+                            </button>
+                          }
+                        </div>
+                      </header>
+                      <p class="review-text">{{ rev.text }}</p>
+                    </div>
+                  } @empty {
+                    <div class="no-reviews">
+                      {{ loc.t('details.no_reviews', 'Zatiaľ žiadne recenzie. Buďte prvý, kto napíše názor!') }}
+                    </div>
+                  }
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -17,6 +17,25 @@
       </button>
     </header>
 
+    <div class="admin-search-wrapper">
+      <div class="search-input-container">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input 
+          type="text" 
+          [placeholder]="loc.t('admin.searchPlaceholder', 'Vyhľadať knihy podľa názvu, autora, žánru...')" 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="onSearchQueryChange($event)"
+          class="admin-search-input" 
+        />
+        @if (searchQuery()) {
+          <button class="clear-search-btn" (click)="onSearchQueryChange('')" type="button">&times;</button>
+        }
+      </div>
+    </div>
+
     @if (loading()) {
       <div class="admin-loading">
         <div class="spinner"></div>
@@ -131,12 +150,75 @@
 
                 <div class="form-row-2">
                   <div class="form-group">
-                    <label for="author">{{ loc.t('admin.authorLabel', 'Autor *') }}</label>
-                    <select id="author" name="author" [(ngModel)]="formModel.authorId" required class="form-control">
-                      @for (author of authors(); track author.id) {
-                        <option [value]="author.id">{{ author.name }} {{ author.surname }}</option>
-                      }
-                    </select>
+                    <label>{{ loc.t('admin.authorLabel', 'Autor *') }}</label>
+                    @if (isAddingAuthor()) {
+                      <div class="add-author-inline">
+                        <div class="form-row-2">
+                          <input type="text" [(ngModel)]="newAuthorName" name="newAuthorName"
+                            [placeholder]="loc.t('admin.authorNameLabel', 'Meno *')" class="form-control" required />
+                          <input type="text" [(ngModel)]="newAuthorSurname" name="newAuthorSurname"
+                            [placeholder]="loc.t('admin.authorSurnameLabel', 'Priezvisko *')" class="form-control" required />
+                        </div>
+                        <div class="form-row-2 mt-2">
+                          <select [(ngModel)]="newAuthorCountryId" name="newAuthorCountryId" class="form-control" required>
+                            <option [value]="0" disabled selected>{{ loc.t('admin.selectCountryPlaceholder', 'Vyberte krajinu...') }}</option>
+                            @for (country of countries(); track country.id) {
+                              <option [value]="country.id">{{ country.name }}</option>
+                            }
+                          </select>
+                          <div class="add-author-actions">
+                            <button type="button" class="btn btn--secondary btn--sm" (click)="isAddingAuthor.set(false)">
+                              {{ loc.t('admin.cancel', 'Zrušiť') }}
+                            </button>
+                            <button type="button" class="btn btn--primary btn--sm" (click)="addNewAuthor()" [disabled]="!newAuthorName.trim() || !newAuthorSurname.trim() || newAuthorCountryId === 0">
+                              {{ loc.t('admin.createAuthorBtn', 'Vytvoriť') }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="custom-select-container">
+                        <button 
+                          type="button" 
+                          class="custom-select-trigger" 
+                          (click)="showAuthorDropdown.set(!showAuthorDropdown())">
+                          {{ getSelectedAuthorName() || loc.t('admin.selectAuthorPlaceholder', 'Vyberte autora...') }}
+                          <span class="custom-select-arrow">&#9662;</span>
+                        </button>
+                        
+                        @if (showAuthorDropdown()) {
+                          <div class="custom-select-dropdown">
+                            <input 
+                              type="text" 
+                              [placeholder]="loc.t('admin.filterAuthorsPlaceholder', 'Hľadať autora...')"
+                              [ngModel]="authorSearchQuery()" 
+                              (ngModelChange)="authorSearchQuery.set($event)"
+                              class="custom-select-search-input"
+                              name="authorSearch"
+                              (click)="$event.stopPropagation()"
+                              autocomplete="off"
+                            />
+                            <div class="custom-select-options">
+                              @for (author of filteredAuthors(); track author.id) {
+                                <div 
+                                  class="custom-select-option" 
+                                  [class.custom-select-option--selected]="author.id === formModel.authorId"
+                                  (click)="selectAuthor(author)">
+                                  {{ author.name }} {{ author.surname }}
+                                </div>
+                              } @empty {
+                                <div class="custom-select-no-options">
+                                  {{ loc.t('admin.noAuthorsFound', 'Nenašli sa žiadni autori') }}
+                                </div>
+                              }
+                              <div class="custom-select-add-new-btn" (click)="startAddingAuthor(); $event.stopPropagation()">
+                                + {{ loc.t('admin.addAuthorBtn', 'Nový autor') }}
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                   <div class="form-group">
                     <label for="published">{{ loc.t('admin.publishedLabel', 'Dátum vydania') }}</label>

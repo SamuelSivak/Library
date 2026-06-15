@@ -63,7 +63,9 @@ export class BookBackdropComponent implements OnInit {
           }));
 
         if (validCovers.length > 0) {
-          const rows = buildRows(validCovers);
+          const shuffled = [...validCovers].sort(() => 0.5 - Math.random());
+          const limitedCovers = shuffled.slice(0, 24);
+          const rows = buildRows(limitedCovers);
           this.row1 = rows.row1;
           this.row2 = rows.row2;
           this.row3 = rows.row3;

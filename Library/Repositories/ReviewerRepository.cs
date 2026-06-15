@@ -1,21 +1,31 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Library.DataContext;
 using Library.DTOs;
 using Library.Models;
+using Library.Services;
 
 namespace Library.Repositories
 {
     public class ReviewerRepository : IReviewerRepository
     {
         private readonly LibraryContext _context;
+        private readonly ICacheService _cache;
 
-        public ReviewerRepository(LibraryContext context)
+        public ReviewerRepository(LibraryContext context, ICacheService cache)
         {
             _context = context;
+            _cache = cache;
         }
         public async Task<IEnumerable<ReviewerDTO>> GetAllAsync()
         {
-            return await _context.Reviewers
+            var cacheKey = "reviewers_all";
+            var cached = await _cache.GetAsync<IEnumerable<ReviewerDTO>>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            var result = await _context.Reviewers
                 .Include(r => r.Reviews)
                 .Select(r => new ReviewerDTO
                 {
@@ -24,10 +34,20 @@ namespace Library.Repositories
                     Reviews = r.Reviews!.Select(review => review.Text!).ToList()
                 })
                 .ToListAsync();
+
+            await _cache.SetAsync(cacheKey, (IEnumerable<ReviewerDTO>)result, TimeSpan.FromMinutes(1));
+            return result;
         }
         public async Task<ReviewerDTO?> GetByIdAsync(int id)
         {
-            return await _context.Reviewers
+            var cacheKey = $"reviewer_{id}";
+            var cached = await _cache.GetAsync<ReviewerDTO>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            var reviewer = await _context.Reviewers
                 .Include(r => r.Reviews)
                 .Where(r => r.Id == id)
                 .Select(r => new ReviewerDTO
@@ -37,6 +57,12 @@ namespace Library.Repositories
                     Reviews = r.Reviews!.Select(review => review.Text!).ToList()
                 })
                 .FirstOrDefaultAsync();
+
+            if (reviewer != null)
+            {
+                await _cache.SetAsync(cacheKey, reviewer, TimeSpan.FromMinutes(30));
+            }
+            return reviewer;
         }
         public async Task<ReviewerDTO> CreateAsync(CreateReviewerDTO reviewer)
         {
@@ -46,6 +72,9 @@ namespace Library.Repositories
             };
             _context.Reviewers.Add(newReviewer);
             await _context.SaveChangesAsync();
+
+            await _cache.RemoveAsync("reviewers_all");
+
             return new ReviewerDTO
             {
                 Id = newReviewer.Id,

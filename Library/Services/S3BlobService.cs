@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 
 namespace Library.Services
 {
+    
     public class S3BlobService : IBlobService
     {
         private readonly IAmazonS3 _s3Client;
         private readonly string _bucketName;
 
+        
         public S3BlobService(IAmazonS3 s3Client, IConfiguration configuration)
         {
             _s3Client = s3Client;
@@ -67,7 +69,6 @@ namespace Library.Services
             var response = await _s3Client.GetObjectAsync(getRequest);
             return (response.ResponseStream, response.Headers.ContentType);
         }
-
         public async Task<bool> DeleteFileAsync(string fileId)
         {
             try

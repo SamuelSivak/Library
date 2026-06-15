@@ -1,6 +1,6 @@
 namespace Library.Exceptions
 {
-    // JSON error response shape returned by GlobalExceptionHandlingMiddleware
+    // JSON error response 
     public class ErrorResponse
     {
         public int StatusCode { get; set; }

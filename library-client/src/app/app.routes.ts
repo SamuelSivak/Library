@@ -7,6 +7,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/landing/landing').then(m => m.LandingPage)
   },
   {
+    path: 'books',
+    loadComponent: () => import('./features/books/books').then(m => m.BooksPage)
+  },
+  {
     path: 'authors',
     loadComponent: () => import('./features/authors/authors').then(m => m.AuthorsPage)
   },

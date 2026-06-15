@@ -3,7 +3,7 @@
     <a class="nav-brand" routerLink="/">Library</a>
 
     <ul class="nav-links">
-      <li><a class="nav-link" [class.nav-link--active]="activeLink === 'books'" routerLink="/">{{ loc.t('nav.books', 'Books') }}</a></li>
+      <li><a class="nav-link" [class.nav-link--active]="activeLink === 'books'" routerLink="/books">{{ loc.t('nav.books', 'Books') }}</a></li>
       <li><a class="nav-link" [class.nav-link--active]="activeLink === 'authors'" routerLink="/authors">{{ loc.t('nav.authors', 'Authors') }}</a></li>
       <li><a class="nav-link" [class.nav-link--active]="activeLink === 'genres'" routerLink="/genres">{{ loc.t('nav.genres', 'Genres') }}</a></li>
     </ul>

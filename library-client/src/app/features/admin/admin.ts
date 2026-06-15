@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy, DestroyRef, ChangeDetectorRef, Injector } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, HostListener, ElementRef, ChangeDetectionStrategy, DestroyRef, ChangeDetectorRef, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { BookService } from '../../core/services/book.service';
 import { AuthService } from '../../core/services/auth.service';
 import { LocalizationService } from '../../core/services/localization.service';
@@ -27,15 +28,19 @@ export class AdminPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly injector = inject(Injector);
+  private readonly elRef = inject(ElementRef);
 
   books = signal<Book[]>([]);
   authors = signal<Author[]>([]);
   genres = signal<Genre[]>([]);
+  countries = signal<{ id: number; name: string }[]>([]);
   imageErrors = signal<Record<number, boolean>>({});
   loading = signal(false);
   formError = signal('');
   pendingDeleteId = signal<number | null>(null);
   pendingDeleteTitle = signal('');
+  searchQuery = signal('');
+  private readonly searchSubject = new Subject<string>();
 
   isModalOpen = signal(false);
   modalTitle = signal('');
@@ -45,6 +50,95 @@ export class AdminPage implements OnInit {
 
   formModel: BookFormData = this.getEmptyForm();
   newGenreName = '';
+
+  authorSearchQuery = signal('');
+  showAuthorDropdown = signal(false);
+
+  isAddingAuthor = signal(false);
+  newAuthorName = '';
+  newAuthorSurname = '';
+  newAuthorCountryId = 0;
+
+  filteredAuthors = computed(() => {
+    const query = this.authorSearchQuery().toLowerCase().trim();
+    if (!query) {
+      return this.authors();
+    }
+    return this.authors().filter(a => 
+      `${a.name} ${a.surname}`.toLowerCase().includes(query)
+    );
+  });
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (this.showAuthorDropdown() && !target.closest('.custom-select-container')) {
+      this.showAuthorDropdown.set(false);
+    }
+  }
+
+  getSelectedAuthorName(): string {
+    const author = this.authors().find(a => a.id === this.formModel.authorId);
+    return author ? `${author.name} ${author.surname}` : '';
+  }
+
+  selectAuthor(author: Author): void {
+    this.formModel.authorId = author.id;
+    this.showAuthorDropdown.set(false);
+    this.authorSearchQuery.set('');
+  }
+
+  startAddingAuthor(): void {
+    this.isAddingAuthor.set(true);
+    this.showAuthorDropdown.set(false);
+    const query = this.authorSearchQuery().trim();
+    if (query) {
+      const parts = query.split(/\s+/);
+      if (parts.length > 1) {
+        this.newAuthorName = parts[0];
+        this.newAuthorSurname = parts.slice(1).join(' ');
+      } else {
+        this.newAuthorName = query;
+        this.newAuthorSurname = '';
+      }
+    } else {
+      this.newAuthorName = '';
+      this.newAuthorSurname = '';
+    }
+    this.newAuthorCountryId = 0;
+  }
+
+  addNewAuthor(): void {
+    const name = this.newAuthorName.trim();
+    const surname = this.newAuthorSurname.trim();
+    const countryId = this.newAuthorCountryId;
+    if (!name || !surname || countryId === 0) return;
+
+    this.formError.set('');
+    this.bookService.createAuthor({ name, surname, countryId }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (newAuthor) => {
+        this.authors.update(list => [...list, newAuthor]);
+        this.formModel.authorId = newAuthor.id;
+        this.isAddingAuthor.set(false);
+        this.newAuthorName = '';
+        this.newAuthorSurname = '';
+        this.newAuthorCountryId = 0;
+        this.authorSearchQuery.set('');
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.formError.set(err.error?.message || err.error || 'Failed to create author');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onSearchQueryChange(query: string): void {
+    this.searchQuery.set(query);
+    this.searchSubject.next(query);
+  }
 
   onImageError(bookId: number): void {
     this.imageErrors.update(errors => ({ ...errors, [bookId]: true }));
@@ -58,14 +152,23 @@ export class AdminPage implements OnInit {
     toObservable(this.loc.currentLang, { injector: this.injector }).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
-      this.loadData();
+      this.loadData(this.searchQuery());
+    });
+
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(query => {
+      this.searchQuery.set(query);
+      this.loadData(query);
     });
   }
 
-  loadData(): void {
+  loadData(search?: string): void {
     this.loading.set(true);
 
-    this.bookService.getBooks().pipe(
+    this.bookService.getBooks(search).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: data => {
@@ -100,6 +203,15 @@ export class AdminPage implements OnInit {
         this.cdr.markForCheck();
       }
     });
+
+    this.bookService.getCountries().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: data => {
+        this.countries.set(data);
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   openAddModal(): void {
@@ -108,6 +220,12 @@ export class AdminPage implements OnInit {
     this.formError.set('');
     this.uploadError.set('');
     this.formModel = this.getEmptyForm();
+    this.authorSearchQuery.set('');
+    this.showAuthorDropdown.set(false);
+    this.isAddingAuthor.set(false);
+    this.newAuthorName = '';
+    this.newAuthorSurname = '';
+    this.newAuthorCountryId = 0;
     this.isModalOpen.set(true);
   }
 
@@ -132,6 +250,12 @@ export class AdminPage implements OnInit {
       authorId: book.authorId || (this.authors().length > 0 ? this.authors()[0].id : 0),
       genreIds: currentGenreIds
     };
+    this.authorSearchQuery.set('');
+    this.showAuthorDropdown.set(false);
+    this.isAddingAuthor.set(false);
+    this.newAuthorName = '';
+    this.newAuthorSurname = '';
+    this.newAuthorCountryId = 0;
     this.isModalOpen.set(true);
   }
 
@@ -226,7 +350,7 @@ export class AdminPage implements OnInit {
     ).subscribe({
       next: () => {
         this.closeModal();
-        this.loadData();
+        this.loadData(this.searchQuery());
       },
       error: (err) => {
         this.formError.set(err.error?.message || err.error || 'Operation failed');
@@ -253,7 +377,7 @@ export class AdminPage implements OnInit {
     ).subscribe({
       next: () => {
         this.pendingDeleteId.set(null);
-        this.loadData();
+        this.loadData(this.searchQuery());
       },
       error: (err) => {
         this.formError.set(err.error?.message || 'Delete failed');

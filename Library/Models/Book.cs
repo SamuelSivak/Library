@@ -10,6 +10,8 @@ namespace Library.Models
         public string? ImageUrl { get; set; }
         public required DateTime Published { get; set; }
         public required int AuthorId { get; set; }
+        public BiBookAnalytics? Analytics { get; set; }
+
 
         public Author? Author { get; set; }
 

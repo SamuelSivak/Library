@@ -1,4 +1,5 @@
 using Library.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Library.Logging
 {
@@ -6,14 +7,15 @@ namespace Library.Logging
     public class GlobalExceptionHandlingMiddleware
     {
         private readonly RequestDelegate _next;
-
-        public GlobalExceptionHandlingMiddleware(RequestDelegate next)
+        private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
+        public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         
-        public async Task InvokeAsync(HttpContext context, ILoggerService loggerService)
+        public async Task InvokeAsync(HttpContext context)
         {
             try
             {
@@ -23,15 +25,15 @@ namespace Library.Logging
             catch (Exception ex)
             {
                
-                await HandleExceptionAsync(context, ex, loggerService);
+                await HandleExceptionAsync(context, ex);
             }
         }
 
         
-        private async Task HandleExceptionAsync(HttpContext context, Exception exception, ILoggerService loggerService)
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
           
-            await loggerService.LogErrorAsync($"Unhandled exception: {context.Request.Path}", exception);
+            _logger.LogError(exception, "Unhandled exception: {Path}", context.Request.Path);
 
             context.Response.ContentType = "application/json";
 

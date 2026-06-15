@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Subject, combineLatest, Subscription } from 'rxjs';
 import { BookService } from '../../core/services/book.service';
 import { AuthService } from '../../core/services/auth.service';
 import { LocalizationService } from '../../core/services/localization.service';
@@ -47,11 +47,15 @@ export class LandingPage implements OnInit {
   }
 
   private readonly searchSubject = new Subject<string>();
+  private booksSubscription?: Subscription;
 
   ngOnInit(): void {
-    toObservable(this.loc.currentLang, { injector: this.injector }).pipe(
+    combineLatest([
+      toObservable(this.loc.currentLang, { injector: this.injector }),
+      this.route.queryParams
+    ]).pipe(
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => {
+    ).subscribe(([lang, params]) => {
       this.bookService.getGenres().pipe(
         takeUntilDestroyed(this.destroyRef)
       ).subscribe(data => {
@@ -59,22 +63,17 @@ export class LandingPage implements OnInit {
         this.cdr.markForCheck();
       });
       
+      const genreParam = params['genre'] || '';
+      this.selectedGenre.set(genreParam);
+      const searchParam = params['search'] || '';
+      this.searchQuery.set(searchParam);
+      
       this.loadBooks();
       
       const currentBook = this.selectedBook();
       if (currentBook) {
         this.reloadBookDetails(currentBook.id);
       }
-    });
-
-    this.route.queryParams.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(params => {
-      const genreParam = params['genre'] || '';
-      this.selectedGenre.set(genreParam);
-      const searchParam = params['search'] || '';
-      this.searchQuery.set(searchParam);
-      this.loadBooks();
     });
 
     this.searchSubject.pipe(
@@ -181,9 +180,10 @@ export class LandingPage implements OnInit {
 
   private loadBooks(): void {
     this.loading.set(true);
-    this.bookService.getBooks(this.searchQuery(), this.selectedGenre()).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
+    if (this.booksSubscription) {
+      this.booksSubscription.unsubscribe();
+    }
+    this.booksSubscription = this.bookService.getBooks(this.searchQuery(), this.selectedGenre()).subscribe({
       next: data => {
         const mapped = data.map(b => ({
           ...b,

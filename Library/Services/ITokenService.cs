@@ -1,9 +1,10 @@
 using Library.Models;
+using System.Threading.Tasks;
 
 namespace Library.Services
 {
     public interface ITokenService
     {
-        string CreateToken(User user);
+        Task<string> CreateToken(ApplicationUser user);
     }
 }

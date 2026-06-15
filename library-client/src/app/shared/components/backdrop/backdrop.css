@@ -35,9 +35,9 @@
   flex-shrink: 0;
 }
 
-.row-left      { animation: scrollLeft     80s linear infinite; }
-.row-right     { animation: scrollRight    64s linear infinite; }
-.row-left-slow { animation: scrollLeft     110s linear infinite; }
+.row-left      { animation: scrollLeft     180s linear infinite; }
+.row-right     { animation: scrollRight    150s linear infinite; }
+.row-left-slow { animation: scrollLeft     220s linear infinite; }
 
 .book-cover {
   width: 128px;

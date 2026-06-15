@@ -2,15 +2,22 @@ using Microsoft.EntityFrameworkCore;
 using Library.DataContext;
 using Library.Models;
 using Library.DTOs;
+using Library.Services;
+using Hangfire;
 
 namespace Library.Repositories
 {
     public class ReviewRepository : IReviewRepository
     {
         private readonly LibraryContext _context;
-        public ReviewRepository(LibraryContext context)
+        private readonly IBackgroundJobClient _backgroundJobClient;
+        private readonly ICacheService _cache;
+
+        public ReviewRepository(LibraryContext context, IBackgroundJobClient backgroundJobClient, ICacheService cache)
         {
             _context = context;
+            _backgroundJobClient = backgroundJobClient;
+            _cache = cache;
         }
 
         public async Task<IEnumerable<ReviewDTO>> GetAllAsync()
@@ -54,7 +61,10 @@ namespace Library.Repositories
                 reviewer = new Reviewer { Name = username };
                 _context.Reviewers.Add(reviewer);
                 await _context.SaveChangesAsync();
+                
             }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName!.ToLower() == username.ToLower());
 
             var newReview = new Review
             {
@@ -62,10 +72,18 @@ namespace Library.Repositories
                 Rating = review.Rating,
                 CreatedAt = DateTime.UtcNow,
                 BookId = review.BookId,
-                ReviewerId = reviewer.Id
+                ReviewerId = reviewer.Id,
+                UserId = user?.Id
             };
             _context.Reviews.Add(newReview);
             await _context.SaveChangesAsync();
+            _backgroundJobClient.Enqueue<IBookAnalyticsService>(x => x.UpdateAnalyticsForBookAsync(newReview.BookId));
+
+            await _cache.RemoveAsync("reviewers_all");
+            foreach (var lang in new[] { "SK", "EN", "GR" })
+            {
+                await _cache.RemoveAsync($"book_detail_{newReview.BookId}_{lang}");
+            }
 
             return await GetByIdAsync(newReview.Id)
                 ?? throw new InvalidOperationException($"Review with id {newReview.Id} not found after creation.");
@@ -76,8 +94,17 @@ namespace Library.Repositories
             var review = await _context.Reviews.FindAsync(id);
             if (review == null) return false;
 
+            var bookId = review.BookId;
             _context.Reviews.Remove(review);
             await _context.SaveChangesAsync();
+            _backgroundJobClient.Enqueue<IBookAnalyticsService>(x => x.UpdateAnalyticsForBookAsync(bookId));
+
+            await _cache.RemoveAsync("reviewers_all");
+            foreach (var lang in new[] { "SK", "EN", "GR" })
+            {
+                await _cache.RemoveAsync($"book_detail_{bookId}_{lang}");
+            }
+
             return true;
         }
         public async Task<bool> ExistsAsync(string text)
