@@ -40,11 +40,12 @@ Once execution is complete, the services will be available at:
 ## Local Development Setup
 This setup is ideal if you prefer to run the backend and frontend services directly on your local machine.
 
->  ### Prerequisites
-> * .NET 10 SDK installed
-> * Node.js and npm installed
-> * A running instance of SQL Server 2022 with Full-Text Search (FTS) feature enabled
-> * A running instance of Redis
+### Prerequisites
+
+ * .NET 10 SDK installed
+* Node.js and npm installed
+* A running instance of SQL Server 2022 with Full-Text Search (FTS) feature enabled
+* A running instance of Redis
 
 
 ### A. Backend (C# .NET Core API)
@@ -65,8 +66,7 @@ dotnet build
 ```bash
 dotnet run --project Library
 ```
-> [!NOTE] 
-> Ensure your `appsettings.json` has the correct   `ConnectionStrings:DefaultConnection` for your SQL server instance, and check your Redis connection settings.
+Ensure your `appsettings.json` has the correct   `ConnectionStrings:DefaultConnection` for your SQL server instance, and check your Redis connection settings.
 
 The API will run locally and listen on:
 * **HTTP**: http://localhost:5185
@@ -87,8 +87,8 @@ npm start
 ```
 The Angular client will compile and run locally on:
 * **Frontend URL**: http://localhost:4200
-> [!NOTE]
-> Make sure the backend API URL configuration matches your running backend instance.
+
+Make sure the backend API URL configuration matches your running backend instance.
 
 
 
