@@ -75,7 +75,11 @@ dotnet build
 ```bash
 dotnet run --project Library
 ```
-Ensure your `appsettings.json` has the correct `ConnectionStrings:DefaultConnection` for your SQL server instance, and check your Redis connection settings.
+
+> [!NOTE]
+> Ensure your `appsettings.json` has the correct `ConnectionStrings:DefaultConnection` for your SQL server instance, and check your Redis connection settings.
+
+
 
 The API will run locally and listen on:
 * **HTTP**: http://localhost:5185
