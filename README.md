@@ -66,10 +66,7 @@ dotnet build
 dotnet run --project Library
 ```
 > [!NOTE] 
-> Ensure your `appsettings.json` has the correct   
-> `ConnectionStrings:DefaultConnection` for your SQL 
-> Server instance, and check your Redis connection 
-> settings.
+> Ensure your `appsettings.json` has the correct   `ConnectionStrings:DefaultConnection` for your SQL server instance, and check your Redis connection settings.
 
 The API will run locally and listen on:
 * **HTTP**: http://localhost:5185
@@ -91,5 +88,4 @@ npm start
 The Angular client will compile and run locally on:
 * **Frontend URL**: http://localhost:4200
 > [!NOTE]
-> Make sure the backend API URL configuration matches 
-> your running backend instance.
+> Make sure the backend API URL configuration matches your running backend instance.
