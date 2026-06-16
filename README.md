@@ -39,7 +39,7 @@ Once execution is complete, the services will be available at:
 
 ## Local Development Setup
 This setup is ideal if you prefer to run the backend and frontend services directly on your local machine.
-> [!NOTE]
+
 >  ### Prerequisites
 > * .NET 10 SDK installed
 > * Node.js and npm installed
@@ -87,8 +87,6 @@ npm start
 ```
 The Angular client will compile and run locally on:
 * **Frontend URL**: http://localhost:4200
-> [!NOTE]
 > Make sure the backend API URL configuration matches your running backend instance.
 >
-> [!NOTE]
-> Useful information that users should know, even when skimming content.
+
