@@ -16,6 +16,61 @@
 
 </div>
 
+
+# What the Library System Does
+
+Traditional cataloging software is often slow, packaged as resource-heavy monoliths, and struggles to scale under load. Retrieving thousands of books alongside their reviews can quickly saturate databases and degrade response times.
+
+Our Library System provides a single, cohesive ecosystem to manage catalogs, authors, and reader feedback with sub-second latencies.
+
+It leverages a decoupled architecture where the Angular client renders a fluid user experience while the .NET Web API handles optimized data processing, offloading statistics to background workers, and caching intensive database lookups.
+
+> [!NOTE]
+> The entire environment runs out of the box. Docker Compose automatically provisions and interconnects all layers, including object storage, proxy routing, and distributed cache.
+
+---
+
+## Application Modules
+
+The application is split into specialized views tailored for both library patrons and system administrators.
+
+| Module | What it covers |
+| :--- | :--- |
+| **Book Catalog** | Dynamic searching, filtering by genre, and multi-criteria sorting (popularity, overall rating, published date, and alphabetical order) |
+| **Author Profiles** | Showcases author details and national origins, complete with dynamic localized translations |
+| **User Reviews** | Interactive rating submission and review management directly linked to user profiles |
+| **Admin Control Panel** | A secure dashboard for library managers to add, update, and remove books, featuring drag-and-drop cover image uploading |
+
+> [!NOTE]
+> All text fields, book titles, descriptions, genres, and author information are fully localized in Slovak, English, and Greek, resolved dynamically at the database query level.
+
+---
+
+## Technical Optimizations
+
+The system employs targeted back-end and database-level optimizations to maintain performance even under high concurrent traffic.
+
+| Optimization | How it works |
+| :--- | :--- |
+| **Query Routing** | Uses ID-based `UNION` search queries in MS SQL Server to completely avoid sorting large description text columns |
+| **Hybrid Caching** | Integrates Redis and local .NET HybridCache to cache book lists and reviewer entities, reducing database hits to zero for frequent routes |
+| **Asynchronous Jobs** | Enqueues heavy rating and review analytics to a Hangfire background queue, keeping API requests responsive |
+| **Object Storage** | Offloads static cover image assets from the database and local filesystem to MinIO S3-compatible cloud storage |
+
+---
+
+## Infrastructure Tools
+
+Built-in services for administration, API exploration, and diagnostic monitoring.
+
+| Tool | What it does |
+| :--- | :--- |
+| **Swagger UI** | Interactive API playground to test REST endpoints and security authorization headers |
+| **Seq Console** | Centralized structured log viewer with real-world Correlation ID tracing across proxy, client, and API |
+| **MinIO Console** | Object storage dashboard to manage, inspect, and configure S3 buckets and cover images |
+| **Nginx Reverse Proxy** | Acts as the single entry-point for the host, resolving CORS and routing client/API traffic on port 80 |
+
+
 ## Quick Start
 
 ### Clone the Repository
