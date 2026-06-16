@@ -104,13 +104,6 @@ The Angular client will compile and run locally on:
 > [!NOTE]
 > Make sure the backend API URL configuration matches your running backend instance.
 
-## Technical Details 
 
-- **Framework:** ASP.NET Core Web API on .NET 10, and Angular 18 using standalone components and Signals for state management
-- **Database:** MS SQL Server 2022 with Full-Text Search (FTS) and database-level localization translation tables
-- **Caching:** Redis distributed caching combined with .NET HybridCache for optimized route serialization
-- **Background jobs:** Hangfire task engine executing asynchronous calculations for book analytics
-- **Media storage:** MinIO S3-compatible object storage integrated via the AWS S3 SDK for cover uploads
-- **Localization:** Slovak, English, and Greek localization engine resolved dynamically via Accept-Language headers
-- **Tracing:** Correlation ID propagation across the Nginx reverse proxy, Angular client, and backend API, visualized in Seq
-- **Deployment:** Multi-container deployment managed as a single ecosystem via Docker Compose
+> [!NOTE]
+> This is a helpful note! Make sure to review this information carefully.
