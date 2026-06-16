@@ -86,7 +86,7 @@ export class BooksPage implements OnInit {
     }
     this.currentPage.set(page);
     this.loadBooks();
-    // Scroll to top of catalog smoothly
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 

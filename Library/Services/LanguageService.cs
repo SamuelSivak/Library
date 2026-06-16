@@ -39,7 +39,7 @@ namespace Library.Services
                 }
             }
 
-            return "SK"; // Default
+            return "SK"; 
         }
     }
 }

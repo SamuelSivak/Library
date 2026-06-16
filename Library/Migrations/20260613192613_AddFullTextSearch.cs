@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Library.Migrations
 {
-    /// <inheritdoc />
+    
     public partial class AddFullTextSearch : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

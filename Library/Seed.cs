@@ -16,7 +16,7 @@ namespace Library
 {
     public static class Seed
     {
-        // Helper to clear existing tables (excluding user/role tables)
+        
         private static string ToRoman(int number)
         {
             if (number < 1) return string.Empty;
@@ -50,7 +50,7 @@ namespace Library
             await context.Genres.ExecuteDeleteAsync();
             await context.Country.ExecuteDeleteAsync();
 
-            // Reset SQL Server Identity Seeds to 0 (next inserted record gets ID 1)
+            
             Console.WriteLine("[Seed] Resetting database identity seeds...");
             await context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT ('Reviews', RESEED, 0);");
             await context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT ('BookTranslations', RESEED, 0);");
@@ -103,7 +103,7 @@ namespace Library
                 Console.WriteLine($"[Seed] Failed to disable identity cache: {ex.Message}");
             }
 
-            // Seed Roles first
+            
             var roles = new[] { "Admin", "User" };
             foreach (var role in roles)
             {
@@ -114,7 +114,7 @@ namespace Library
                 }
             }
 
-            // Seed Admin User
+            
             var adminUser = await userManager.FindByNameAsync("admin");
             if (adminUser == null)
             {
@@ -155,8 +155,8 @@ namespace Library
                 }
             }
 
-            // Check if we need to clear old database seed data.
-            // We clear and reseed if the count of books, authors, or analytics is not correct, or if sampleBook Id is out of range.
+            
+            
             var hasOldOrLoremSeed = false;
             var bookCount = await context.Books.CountAsync();
             var authorCount = await context.Authors.CountAsync();
@@ -211,7 +211,7 @@ namespace Library
                 await ClearDatabaseAsync(context);
             }
 
-            // If the database already has books (e.g. customized test data), we skip the Bogus seed to avoid duplicate database writes.
+            
             if (await context.Books.AnyAsync())
             {
                 Console.WriteLine("[Seed] Database already seeded. Skipping Bogus seed.");
@@ -220,7 +220,7 @@ namespace Library
 
             Console.WriteLine("[Seed] Seeding database with Bogus...");
 
-            // ── Countries (15 total) ───────────────────────────────────────────
+            
             var cSK = await EnsureCountry(context, "Slovakia");
             var cUK = await EnsureCountry(context, "United Kingdom");
             var cUS = await EnsureCountry(context, "United States");
@@ -237,7 +237,7 @@ namespace Library
             var cCA = await EnsureCountry(context, "Canada");
             var cAU = await EnsureCountry(context, "Australia");
 
-            // ── Genres & Translations (15 total) ───────────────────────────────
+            
             var genresList = new List<(string Name, string Sk, string Gr)>
             {
                 ("Classic", "Klasika", "Κλασικό"),
@@ -274,12 +274,12 @@ namespace Library
             }
             await context.SaveChangesAsync();
 
-            // Initialize Bogus Fakers
+            
             var faker = new Faker();
             var fakerSk = new Faker("sk");
             var fakerEl = new Faker("el");
 
-            // ── Authors (200 total) ────────────────────────────────────────────
+            
             var countries = await context.Country.ToListAsync();
             var authors = new List<Author>();
 
@@ -315,7 +315,7 @@ namespace Library
             await context.SaveChangesAsync();
             Console.WriteLine($"[Seed] Seeded {authors.Count} authors.");
 
-            // ── Famous Realistic Book Titles pool (100 total) ──────────────────
+            
             var famousTitles = new List<(string En, string Sk, string Gr)>
             {
                 ("The Shadow of the Wind", "Tieň vetra", "Η Σκιά του Ανέμου"),
@@ -419,7 +419,7 @@ namespace Library
                 ("Winter's Heart", "Srdce zimy", "Η Καρδιά του Χειμώνα")
             };
 
-            // ── Books (30,000 total) ───────────────────────────────────────────
+            
             var authorIds = await context.Authors.Select(a => a.Id).ToListAsync();
             var genreIds = await context.Genres.Select(g => g.Id).ToListAsync();
 
@@ -458,14 +458,14 @@ namespace Library
                         Translations = new List<BookTranslation>()
                     };
 
-                    // Assign 1 to 3 random genres
+                    
                     var selectedGenres = genreIds.OrderBy(_ => Guid.NewGuid()).Take(faker.Random.Number(1, 3));
                     foreach (var gId in selectedGenres)
                     {
                         book.BookGenres.Add(new BookGenre { GenreId = gId });
                     }
 
-                    // Slovak translation
+                    
                     book.Translations.Add(new BookTranslation
                     {
                         LanguageCode = "SK",
@@ -473,7 +473,7 @@ namespace Library
                         Description = fakerSk.Lorem.Paragraph()
                     });
 
-                    // Greek translation
+                    
                     book.Translations.Add(new BookTranslation
                     {
                         LanguageCode = "GR",
@@ -490,9 +490,9 @@ namespace Library
                 Console.WriteLine($"[Seed] Seeded books {batchStart} to {batchEnd}...");
             }
 
-            // ── Reviewers ──────────────────────────────────────────────────────
+            
             var reviewers = new List<Reviewer>();
-            for (int i = 0; i < 500; i++) // Scale reviewers to 500
+            for (int i = 0; i < 500; i++) 
             {
                 reviewers.Add(new Reviewer
                 {
@@ -504,7 +504,7 @@ namespace Library
             context.ChangeTracker.Clear();
             Console.WriteLine($"[Seed] Seeded {reviewers.Count} reviewers.");
 
-            // ── Reviews (150,000 total) ────────────────────────────────────────
+            
             var users = await userManager.Users.ToListAsync();
             var reviewerIds = await context.Reviewers.Select(r => r.Id).ToListAsync();
             var bookIds = await context.Books.Select(b => b.Id).ToListAsync();
@@ -513,7 +513,7 @@ namespace Library
             int totalReviews = 150000;
             int reviewBatchSize = 25000;
 
-            // To compute analytics in-memory at the end, we can keep track of rating sums and counts for each bookId
+            
             var ratingSums = new Dictionary<int, double>();
             var ratingCounts = new Dictionary<int, int>();
 
@@ -535,7 +535,7 @@ namespace Library
                     var user = faker.Random.Bool(0.3f) ? faker.PickRandom(users) : null;
                     var rating = faker.Random.Number(1, 5);
 
-                    // Update in-memory stats
+                    
                     ratingSums[bookId] += rating;
                     ratingCounts[bookId]++;
 
@@ -556,7 +556,7 @@ namespace Library
                 Console.WriteLine($"[Seed] Seeded reviews {batchStart} to {batchEnd}...");
             }
 
-            // ── Generate Bi_BookAnalytics ─────────────────────────────────────
+            
             Console.WriteLine("[Seed] Generating Bi_BookAnalytics...");
             var analyticsList = new List<BiBookAnalytics>();
             foreach (var bookId in bookIds)
@@ -584,7 +584,7 @@ namespace Library
             }
             Console.WriteLine("[Seed] Seeded Bi_BookAnalytics successfully.");
 
-            // ── Migrate cover images to MinIO blob storage using pool ──────────
+            
             try
             {
                 var booksList = await context.Books.ToListAsync();

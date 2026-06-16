@@ -26,7 +26,7 @@ namespace Library.Repositories
             }
 
             var result = await _context.Reviewers
-                .Include(r => r.Reviews)
+                .AsNoTracking()
                 .Select(r => new ReviewerDTO
                 {
                     Id = r.Id,
@@ -48,7 +48,7 @@ namespace Library.Repositories
             }
 
             var reviewer = await _context.Reviewers
-                .Include(r => r.Reviews)
+                .AsNoTracking()
                 .Where(r => r.Id == id)
                 .Select(r => new ReviewerDTO
                 {

@@ -49,7 +49,7 @@
         }
       </div>
 
-      <!-- Pagination controls -->
+      
       @if (totalPages() > 1) {
         <div class="pagination-container">
           <button 
@@ -85,7 +85,7 @@
     }
   </main>
 
-  <!-- Details Modal -->
+  
   @if (selectedBook(); as book) {
     <div class="modal-overlay" (click)="closeBookDetails()">
       <div class="details-card" (click)="$event.stopPropagation()">
@@ -100,7 +100,7 @@
         <div class="details-body">
           <div class="details-grid">
             
-            <!-- Left Column: Cover & Stats -->
+            
             <div class="details-col-left">
               <div class="details-cover-wrapper">
                 @if (book.imageUrl && !imageErrors()[book.id]) {
@@ -128,7 +128,7 @@
               </div>
             </div>
 
-            <!-- Right Column: Description & Reviews -->
+            
             <div class="details-col-right">
               <div class="details-section">
                 <div class="details-genres">
@@ -139,7 +139,7 @@
                 <p class="details-desc">{{ book.description || loc.t('details.no_desc', 'Tento titul nemá zadaný popis.') }}</p>
               </div>
 
-              <!-- Rating Header -->
+              
               <div class="details-rating-summary">
                 <span class="summary-label">{{ loc.t('details.rating', 'Celkové hodnotenie') }}</span>
                 <div class="rating-stars-row">
@@ -170,7 +170,7 @@
                 <h4 class="section-title">{{ loc.t('details.reviews_title', 'Používateľské recenzie') }}</h4>
                 
                 @if (authService.isLoggedIn()) {
-                  <!-- Add Review Form -->
+                  
                   <div class="add-review-box">
                     <textarea 
                       [placeholder]="loc.t('details.review_placeholder', 'Napíšte svoju recenziu...')" 

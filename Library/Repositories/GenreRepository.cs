@@ -86,7 +86,7 @@ namespace Library.Repositories
             _context.Genres.Add(newGenre);
             await _context.SaveChangesAsync();
 
-            // Invalidate caches
+            
             var languages = new[] { "SK", "GR", "EL", "EN" };
             foreach (var lang in languages)
             {

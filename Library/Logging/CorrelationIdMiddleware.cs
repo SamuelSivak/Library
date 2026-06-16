@@ -18,17 +18,17 @@ namespace Library.Logging
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Check if the request already contains a Correlation ID
+            
             if (!context.Request.Headers.TryGetValue(CorrelationIdHeaderKey, out StringValues correlationId))
             {
                 correlationId = Guid.NewGuid().ToString();
             }
 
-            // Add the Correlation ID to the response headers
+            
             context.Response.Headers.Append(CorrelationIdHeaderKey, correlationId);
 
-            // Push CorrelationId property into Serilog's LogContext.
-            // Using statement ensures it is automatically removed from context when request processing completes.
+            
+            
             using (LogContext.PushProperty("CorrelationId", correlationId.ToString()))
             {
                 await _next(context);

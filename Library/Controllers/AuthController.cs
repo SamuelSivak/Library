@@ -51,7 +51,7 @@ namespace Library.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Assign default role "User"
+            
             await _userManager.AddToRoleAsync(user, "User");
 
             return new UserDTO

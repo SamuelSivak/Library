@@ -258,7 +258,7 @@ namespace Library.Controllers
             
             if (!Translations.ContainsKey(normalizedLang))
             {
-                normalizedLang = "EN"; // Fallback to English
+                normalizedLang = "EN"; 
             }
 
             return Ok(Translations[normalizedLang]);

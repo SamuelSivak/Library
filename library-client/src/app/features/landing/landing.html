@@ -88,7 +88,7 @@
         <div class="details-body">
           <div class="details-grid">
             
-            <!-- Left Column: Cover & Stats -->
+            
             <div class="details-col-left">
               <div class="details-cover-wrapper">
                 @if (book.imageUrl && !imageErrors()[book.id]) {
@@ -116,7 +116,7 @@
               </div>
             </div>
 
-            <!-- Right Column: Description & Reviews -->
+            
             <div class="details-col-right">
               <div class="details-section">
                 <div class="details-genres">
@@ -127,7 +127,7 @@
                 <p class="details-desc">{{ book.description || loc.t('details.no_desc', 'Tento titul nemá zadaný popis.') }}</p>
               </div>
 
-              <!-- Rating Header -->
+              
               <div class="details-rating-summary">
                 <span class="summary-label">{{ loc.t('details.rating', 'Celkové hodnotenie') }}</span>
                 <div class="rating-stars-row">
@@ -155,7 +155,7 @@
                 </div>
               </div>
 
-              <!-- Reviews Section -->
+              
               <div class="details-reviews-section">
                 <h3 class="reviews-header">{{ loc.t('details.reviews_title', 'Recenzie čitateľov') }}</h3>
                 <div class="reviews-list">
@@ -193,7 +193,7 @@
                 </div>
               </div>
 
-              <!-- Add Review Form -->
+              
               <div class="add-review-section">
                 @if (authService.isLoggedIn()) {
                   <h4 class="add-review-title">{{ loc.t('details.add_review_title', 'Pridať recenziu') }}</h4>
@@ -203,7 +203,7 @@
                   }
 
                   <form (ngSubmit)="submitReview()" #reviewForm="ngForm" class="add-review-form">
-                    <!-- Star Rating Picker -->
+                    
                     <div class="rating-picker">
                       @for (star of [1, 2, 3, 4, 5]; track star) {
                         <button type="button" class="picker-star-btn" (click)="selectRating(star)">
@@ -216,7 +216,7 @@
                       <span class="picker-rating-value">{{ newReviewRating() }} / 5</span>
                     </div>
 
-                    <!-- Review Text Input -->
+                    
                     <div class="form-group mt-2">
                       <textarea [ngModel]="newReviewText()" (ngModelChange)="newReviewText.set($event)" name="newReviewText" required
                         [placeholder]="loc.t('details.review_placeholder', 'Napíšte vašu recenziu...')"

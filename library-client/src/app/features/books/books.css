@@ -161,9 +161,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* =========================================================
-   Pagination Styles – Premium Neon Aesthetics
-   ========================================================= */
+
 
 .pagination-container {
   display: flex;
@@ -235,9 +233,7 @@
   letter-spacing: 0.1em;
 }
 
-/* =========================================================
-   Book Details Modal – Glassmorphic Design
-   ========================================================= */
+
 
 .modal-overlay {
   position: fixed;

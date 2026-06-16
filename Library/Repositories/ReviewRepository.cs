@@ -61,7 +61,7 @@ namespace Library.Repositories
                 reviewer = new Reviewer { Name = username };
                 _context.Reviewers.Add(reviewer);
                 await _context.SaveChangesAsync();
-                
+                await _cache.RemoveAsync("reviewers_all");
             }
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName!.ToLower() == username.ToLower());
@@ -79,7 +79,6 @@ namespace Library.Repositories
             await _context.SaveChangesAsync();
             _backgroundJobClient.Enqueue<IBookAnalyticsService>(x => x.UpdateAnalyticsForBookAsync(newReview.BookId));
 
-            await _cache.RemoveAsync("reviewers_all");
             foreach (var lang in new[] { "SK", "EN", "GR" })
             {
                 await _cache.RemoveAsync($"book_detail_{newReview.BookId}_{lang}");
@@ -99,7 +98,6 @@ namespace Library.Repositories
             await _context.SaveChangesAsync();
             _backgroundJobClient.Enqueue<IBookAnalyticsService>(x => x.UpdateAnalyticsForBookAsync(bookId));
 
-            await _cache.RemoveAsync("reviewers_all");
             foreach (var lang in new[] { "SK", "EN", "GR" })
             {
                 await _cache.RemoveAsync($"book_detail_{bookId}_{lang}");

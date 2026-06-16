@@ -299,9 +299,7 @@
   .book-cover-letter { font-size: 3.5rem; }
 }
 
-/* =========================================================
-   Book Details Modal – Glassmorphic Design
-   ========================================================= */
+
 
 .modal-overlay {
   position: fixed;
@@ -704,9 +702,7 @@
   }
 }
 
-/* =========================================================
-   Review Forms & Admin Deletion Action Styles
-   ========================================================= */
+
 
 .add-review-section {
   margin-top: 1.5rem;

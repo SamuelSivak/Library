@@ -118,7 +118,7 @@ namespace Library.Repositories
                 return Enumerable.Empty<BookDTO>();
             }
 
-            // Fetch full books using the retrieved IDs
+            
             var books = await _context.Books.AsNoTracking()
                 .Include(b => b.Analytics)
                 .Include(b => b.Author)
@@ -130,7 +130,7 @@ namespace Library.Repositories
                 .Where(b => bookIds.Contains(b.Id))
                 .ToListAsync();
 
-            // Sort books in memory to match the order of bookIds
+            
             var booksMap = books.ToDictionary(b => b.Id);
             var sortedBooks = bookIds
                 .Where(id => booksMap.ContainsKey(id))
@@ -263,7 +263,7 @@ namespace Library.Repositories
             existingBook.Published = book.Published;
             existingBook.AuthorId = book.AuthorId;
 
-            // Clear old genres and add new ones
+            
             if (existingBook.BookGenres != null)
             {
                 _context.BookGenres.RemoveRange(existingBook.BookGenres);
@@ -327,7 +327,7 @@ namespace Library.Repositories
                 var searchLower = search.ToLower();
                 var searchPattern = $"\"{search}*\"";
 
-                // 1. Pre-fetch matching Author IDs (very fast query on 200 records)
+                
                 var matchingAuthorIds = await _context.Authors
                     .AsNoTracking()
                     .Where(a => 
@@ -337,7 +337,7 @@ namespace Library.Repositories
                     .Select(a => a.Id)
                     .ToListAsync();
 
-                // 2. Pre-fetch matching Genre IDs (very fast query on 15 records)
+                
                 var matchingGenreIds = await _context.Genres
                     .AsNoTracking()
                     .Where(g => 
@@ -347,7 +347,7 @@ namespace Library.Repositories
                     .Select(g => g.Id)
                     .ToListAsync();
 
-                // Build simple, highly indexed subqueries
+                
                 var q1 = _context.Books.AsNoTracking()
                     .Where(b => EF.Functions.Contains(b.Title, searchPattern))
                     .Select(b => b.Id);
@@ -364,12 +364,12 @@ namespace Library.Repositories
                     .Where(bg => matchingGenreIds.Contains(bg.GenreId))
                     .Select(bg => bg.BookId);
 
-                // Combine them using UNION
+                
                 var combinedQuery = q1.Union(q2).Union(q3).Union(q4);
 
                 var bookQuery = _context.Books.AsNoTracking().Where(b => combinedQuery.Contains(b.Id));
 
-                // Apply genre filter on the combined set if specified
+                
                 if (!string.IsNullOrWhiteSpace(genre))
                 {
                     bookQuery = bookQuery.Where(b => b.BookGenres!.Any(bg => 
@@ -384,7 +384,7 @@ namespace Library.Repositories
             }
             else
             {
-                // Normal flow without search query
+                
                 var query = _context.Books.AsNoTracking().AsQueryable();
                 if (!string.IsNullOrWhiteSpace(genre))
                 {

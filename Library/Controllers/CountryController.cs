@@ -1,4 +1,4 @@
-﻿
+
 
 using Library.DTOs;
 using Library.Models;
@@ -18,7 +18,7 @@ namespace Library.Controllers
             _repository = repository;
         }
 
-        // 🤓: Api stuff 🤓
+        
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

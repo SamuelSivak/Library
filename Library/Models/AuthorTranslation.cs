@@ -9,7 +9,7 @@ namespace Library.Models
         
         [Required]
         [MaxLength(10)]
-        public required string LanguageCode { get; set; } // "SK", "GR", "EN"
+        public required string LanguageCode { get; set; } 
         
         [Required]
         [MaxLength(100)]
